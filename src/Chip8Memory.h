@@ -5,8 +5,9 @@
 class Chip8Memory {
 
 public:
-  std::array<unsigned char, chip8MemorySize> memory{};
+  std::array<unsigned int, chip8MemorySize> memory{};
 
   void chip8MemorySet(int &&index, unsigned char &&val);
-  unsigned char chip8memoryGet(int &&index) const;
+  unsigned char chip8memoryGet(int index) const;
+  unsigned short chip8memoryGetShort(int index);
 };

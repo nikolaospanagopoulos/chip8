@@ -23,9 +23,37 @@ bool Chip8Screen::chip8ScreenIsSet(int x, int y) {
 
 void Chip8Screen::print() {}
 Chip8Screen::Chip8Screen() {
-  std::cout << "lalal";
   for (int x{}; x < chip8Width; x++) {
     for (int y{}; y < chip8Height; y++) {
+    }
+  }
+}
+bool Chip8Screen::drawSprite(int x, int y, const unsigned int *sprite,
+                             int num) {
+
+  bool pixelCollision = false;
+
+  for (int ly = 0; ly < num; ly++) {
+    char c = sprite[ly];
+    for (int lx = 0; lx < 8; lx++) {
+      if ((c & (0b10000000 >> lx)) == 0) {
+        continue;
+      }
+      if (pixels.at((ly + y) % chip8Height).at((lx + x) % chip8Width)) {
+        pixelCollision = true;
+      }
+      pixels.at((ly + y) % chip8Height).at((lx + x) % chip8Width) ^= true;
+    }
+  }
+
+  return pixelCollision;
+}
+
+void Chip8Screen::chip8screenClear() {
+
+  for (size_t i{}; i < pixels.size(); i++) {
+    for (size_t j{}; j < pixels[i].size(); j++) {
+      pixels[i][j] = 0;
     }
   }
 }

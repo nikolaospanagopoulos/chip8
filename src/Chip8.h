@@ -13,4 +13,8 @@ public:
   Chip8Register registers;
   Chip8Screen screen{};
   Chip8();
+  void chp8Load(const char *buf, size_t size);
+  void chip8Exec(unsigned short opcode);
+  void execExtended(unsigned short &opcode);
+  void execExtended8(unsigned short &opcode);
 };
