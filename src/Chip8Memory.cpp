@@ -1,9 +1,9 @@
 #include "Chip8Memory.h"
 #include "CustomException.h"
 
-static void memoryInBounds(int index) {
+static void memoryInBounds(int &index) {
 
-  if (index < 0 || index > chip8MemorySize) {
+  if (index < 0 && index > chip8MemorySize) {
     throw CustomException(const_cast<char *>("outside of bounds"));
   }
 }

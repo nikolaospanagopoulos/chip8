@@ -11,7 +11,7 @@ public:
   Chip8Keyboard keyboard;
   Chip8Stack stack;
   Chip8Register registers;
-  Chip8Screen screen{};
+  Chip8Screen screen;
   Chip8();
   void chp8Load(const char *buf, size_t size);
   void chip8Exec(unsigned short opcode);
