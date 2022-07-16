@@ -25,7 +25,7 @@ int main(int argc, char **argv)
       throw CustomException(const_cast<char *>("You must provide a filename"));
     }
 
-    FILE *file = fopen(argv[1], "r");
+    FILE *file = fopen(argv[1], "rb");
 
     if (!file) {
       throw CustomException(const_cast<char *>("file doesnt exist"));
@@ -37,19 +37,14 @@ int main(int argc, char **argv)
     fseek(file, 0, SEEK_SET);
 
     char buff[size];
-    std::cout << buff << std::endl;
     int res = fread(buff, size, 1, file);
 
     if (res != 1) {
       throw CustomException(const_cast<char *>("cannot read from file"));
     }
-    std::cout << res;
-    std::cout << buff << std::endl;
-    fclose(file);
 
     chip8.chp8Load(buff, size);
-
-    std::cout << "pc" << chip8register->PC << std::endl;
+    fclose(file);
 
     SDL_Init(SDL_INIT_EVERYTHING);
     SDL_Window *window = SDL_CreateWindow(
@@ -66,7 +61,7 @@ int main(int argc, char **argv)
     do {
       SDL_Event event;
       while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) {
+        if (event.type == SDL_QUIT || event.key.keysym.sym == 'q') {
           ended = true;
           break;
         } else if (event.type == SDL_KEYDOWN) {
@@ -74,7 +69,6 @@ int main(int argc, char **argv)
           int vkey = keyboard->mapKeyboard(key);
           if (vkey != -1) {
             keyboard->key_down(vkey);
-            std::cout << vkey << std::endl;
           }
         } else if (event.type == SDL_KEYUP) {
           char key = event.key.keysym.sym;
@@ -103,7 +97,7 @@ int main(int argc, char **argv)
       }
       SDL_RenderPresent(renderer);
       if (chip8register->delayTimer > 0) {
-        SDL_Delay(100);
+        SDL_Delay(3);
         chip8register->delayTimer -= 1;
       }
       if (chip8register->soundTimer > 0) {
@@ -112,7 +106,6 @@ int main(int argc, char **argv)
       unsigned short opcode = memory->chip8memoryGetShort(chip8register->PC);
       chip8register->PC += 2;
       chip8.chip8Exec(opcode);
-      std::cout << opcode << std::endl;
     } while (!ended);
     SDL_DestroyWindow(window);
 

@@ -11,14 +11,14 @@ static void stackInBounds(unsigned char &SP) {
 
 void Chip8Stack::chip8StackPush(unsigned short val, unsigned char &SP) {
 
+  SP += 1;
   stackInBounds(SP);
   stack[SP] = val;
-  SP += 1;
 }
 
 unsigned short Chip8Stack::chip8StackPop(unsigned char &SP) {
-  SP -= 1;
   stackInBounds(SP);
   unsigned short val = stack[SP];
+  SP -= 1;
   return val;
 }

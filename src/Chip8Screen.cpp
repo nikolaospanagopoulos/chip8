@@ -1,6 +1,7 @@
 #include "Chip8Screen.h"
 #include "CustomException.h"
 #include "constants.h"
+#include <cstdint>
 
 static void screenCheckBounds(int &x, int &y) {
 
@@ -28,14 +29,13 @@ Chip8Screen::Chip8Screen() {
     }
   }
 }
-bool Chip8Screen::drawSprite(int x, int y, const unsigned int *sprite,
-                             int num) {
+bool Chip8Screen::drawSprite(int x, int y, const char *sprite, int num) {
 
   bool pixelCollision = false;
 
-  for (int ly = 0; ly < num; ly++) {
-    char c = sprite[ly];
-    for (int lx = 0; lx < 8; lx++) {
+  for (uint8_t ly = 0; ly < num; ly++) {
+    uint8_t c = sprite[ly];
+    for (uint8_t lx = 0; lx < 8; lx++) {
       if ((c & (0b10000000 >> lx)) == 0) {
         continue;
       }
