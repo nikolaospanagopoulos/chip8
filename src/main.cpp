@@ -17,12 +17,10 @@ int main(int argc, char **argv)
 
     Chip8Keyboard *keyboard = &chip8.keyboard;
 
-    Chip8Stack *stack = &chip8.stack;
     Chip8Register *chip8register = &chip8.registers;
     Chip8Memory *memory = &chip8.memory;
     Chip8Screen *screen = &chip8.screen;
 
-    std::cout << "nikos";
     if (argc < 2) {
       throw CustomException(const_cast<char *>("You must provide a filename"));
     }
@@ -44,9 +42,9 @@ int main(int argc, char **argv)
     if (res != 1) {
       throw CustomException(const_cast<char *>("cannot read from file"));
     }
-    fclose(file);
 
     chip8.chp8Load(buff, size);
+    fclose(file);
 
     SDL_Init(SDL_INIT_EVERYTHING);
     SDL_Window *window = SDL_CreateWindow(
@@ -63,7 +61,7 @@ int main(int argc, char **argv)
     do {
       SDL_Event event;
       while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) {
+        if (event.type == SDL_QUIT || event.key.keysym.sym == 'q') {
           ended = true;
           break;
         } else if (event.type == SDL_KEYDOWN) {
@@ -71,7 +69,6 @@ int main(int argc, char **argv)
           int vkey = keyboard->mapKeyboard(key);
           if (vkey != -1) {
             keyboard->key_down(vkey);
-            std::cout << vkey << std::endl;
           }
         } else if (event.type == SDL_KEYUP) {
           char key = event.key.keysym.sym;
@@ -100,14 +97,13 @@ int main(int argc, char **argv)
       }
       SDL_RenderPresent(renderer);
       if (chip8register->delayTimer > 0) {
-        SDL_Delay(100);
+        SDL_Delay(3);
         chip8register->delayTimer -= 1;
       }
       if (chip8register->soundTimer > 0) {
         chip8register->soundTimer -= 1;
       }
       unsigned short opcode = memory->chip8memoryGetShort(chip8register->PC);
-      std::cout << "op" << opcode << std::endl;
       chip8register->PC += 2;
       chip8.chip8Exec(opcode);
     } while (!ended);

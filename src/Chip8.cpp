@@ -1,7 +1,9 @@
 #include "Chip8.h"
 #include "CustomException.h"
+#include "SDL2/SDL.h"
 #include "constants.h"
 #include <bitset>
+#include <stdint.h>
 
 const int chip8DefaultCharSet[] = {
 
@@ -50,23 +52,18 @@ void Chip8::execExtended8(unsigned short &opcode) {
 
   switch (finalFourBits) {
   case 0x00:
-    std::cout << "case lal1";
     registers.V[x] = registers.V[y];
     break;
   case 0x01:
-    std::cout << "case lal2";
     registers.V[x] = registers.V[x] | registers.V[y];
     break;
   case 0x02:
-    std::cout << "case lal3";
     registers.V[x] = registers.V[x] & registers.V[y];
     break;
   case 0x03:
-    std::cout << "case lal4";
     registers.V[x] = registers.V[x] ^ registers.V[y];
     break;
   case 0x04:
-    std::cout << "case lal5";
     tmp = registers.V[x] + registers.V[y];
     registers.V[0x0f] = false;
     if (tmp > 0xff) {
@@ -78,7 +75,6 @@ void Chip8::execExtended8(unsigned short &opcode) {
 
   // 8xy5 - SUB Vx, Vy. Set vx = Vx - Vy, set VF = Not borrow
   case 0x05:
-    std::cout << "case lal5";
     registers.V[0x0f] = false;
     if (registers.V[x] > registers.V[y]) {
       registers.V[0x0f] = true;
@@ -88,14 +84,12 @@ void Chip8::execExtended8(unsigned short &opcode) {
 
   // 8xy6 - SHR Vx {, Vy}
   case 0x06:
-    std::cout << "case lal5";
     registers.V[0x0f] = registers.V[x] & 0x01;
     registers.V[x] = registers.V[x] / 2;
     break;
 
   // 8xy7 - SUBN Vx, Vy
   case 0x07:
-    std::cout << "case lal5";
     registers.V[0x0f] = registers.V[y] > registers.V[x];
     registers.V[x] = registers.V[y] - registers.V[x];
     break;
@@ -103,7 +97,6 @@ void Chip8::execExtended8(unsigned short &opcode) {
   // 8xyE - SHL Vx {, Vy}
   case 0x0E:
     registers.V[0x0f] = registers.V[x] & 0b10000000;
-    std::cout << "case lal5";
     registers.V[x] = registers.V[x] * 2;
     break;
   }
@@ -121,52 +114,43 @@ void Chip8::execExtended(unsigned short &opcode) {
 
   case 0x1000:
 
-    std::cout << "case 3";
     registers.PC = nnn;
     break;
     // add to stack counter , pc to nn
   case 0x2000:
-    std::cout << "case 4";
     stack.chip8StackPush(registers.PC, registers.SP);
     registers.PC = nnn;
     break;
     //  skip next instruction if Vx=kk
   case 0x3000:
-    std::cout << "case 5";
     if (registers.V[x] == kk) {
       registers.PC += 2;
     }
     break;
   case 0x4000:
-    std::cout << "case 6";
     if (registers.V[x] != kk) {
       registers.PC += 2;
     }
     break;
     // skip next instruction if Vx = Vy
   case 0x5000:
-    std::cout << "case 7";
     if (registers.V[x] == registers.V[y]) {
       registers.PC += 2;
     }
     break;
     // Vx == kk
   case 0x6000:
-    std::cout << "case 8";
     registers.V[x] = kk;
     break;
     // set Vx = Vx +kk
   case 0x7000:
-    std::cout << "case 9";
     registers.V[x] += kk;
     break;
   case 0x8000:
-    std::cout << "case 10<<";
     execExtended8(opcode);
     break;
 
   case 0x9000:
-    std::cout << "case 20<<";
     if (registers.V[x] != registers.V[y]) {
       registers.PC += 2;
     }
@@ -174,44 +158,110 @@ void Chip8::execExtended(unsigned short &opcode) {
 
   // Annn - LD I, addr. Sets the I register to nnn
   case 0xA000:
-    std::cout << "case 30<<";
     registers.I = nnn;
     break;
 
   // bnnn - Jump to location nnn + V0
   case 0xB000:
-    std::cout << "case 40<<";
     registers.PC = nnn + registers.V[0x00];
     break;
 
   // Cxkk - RND Vx, byte
   case 0xC000:
-    std::cout << "case 50<<";
     srand(clock());
     registers.V[x] = (rand() % 255) & kk;
     break;
 
   case 0xD000: {
-    std::cout << "case 60<<";
-    const unsigned int *sprite = &memory.memory[registers.I];
+    const char *sprite = (const char *)&memory.memory[registers.I];
+
     registers.V[0x0f] =
         screen.drawSprite(registers.V[x], registers.V[y], sprite, n);
   } break;
+  case 0xE000: {
+
+    switch (opcode & 0x00ff) {
+    case 0x9e:
+      // skip next instruction if key with Vx is pressed
+      if (keyboard.key_is_down(registers.V[x])) {
+        registers.PC += 2;
+      }
+      break;
+    case 0xa1:
+      if (!keyboard.key_is_down(registers.V[x])) {
+
+        registers.PC += 2;
+      }
+      break;
+    }
+    break;
+  }
+  case 0xF000:
+    extendedF(opcode);
+    break;
   }
 }
 
-void Chip8::chip8Exec(unsigned short opcode) {
+void Chip8::chip8Exec(unsigned short &opcode) {
 
   switch (opcode) {
   case 0x00e0:
-    std::cout << "case 1" << std::endl;
     screen.chip8screenClear();
     break;
   case 0x00ee:
-    std::cout << "case 2" << std::endl;
     registers.PC = stack.chip8StackPop(registers.SP);
     break;
   default:
     execExtended(opcode);
+  }
+}
+
+void Chip8::extendedF(unsigned short &opcode) {
+  unsigned char x = (opcode >> 8) & 0x000f;
+  switch (opcode & 0x00ff) {
+  case 0x07:
+    registers.V[x] = registers.delayTimer;
+    break;
+  case 0x0A: {
+
+    char pressedKey = keyboard.waitForKeyPress();
+    registers.V[x] = pressedKey;
+
+  } break;
+  case 0x15:
+    registers.delayTimer = registers.V[x];
+    break;
+  case 0x18:
+    registers.soundTimer = registers.V[x];
+    break;
+  case 0x1e:
+    registers.I += registers.V[x];
+
+    break;
+  case 0x29:
+    registers.I = registers.V[x] * 5;
+    break;
+  case 0x33: {
+    uint8_t hundreds = registers.V[x] / 100;
+    uint8_t tens = registers.V[x] / 10 % 10;
+    /*
+        uint8_t units = registers.V[x] % 10;
+        memory.chip8MemorySet((int)registers.I, hundreds);
+        memory.chip8MemorySet((int)registers.I + 1, tens);
+        memory.chip8MemorySet((int)registers.I + 2, units);
+            */
+  } break;
+  case 0x55:
+    for (size_t i{}; i <= x; i++) {
+      memory.chip8MemorySet(registers.I + i, registers.V[i]);
+    }
+    break;
+  case 0x65: {
+
+    for (size_t i{}; i <= x; i++) {
+      registers.V[i] = memory.chip8memoryGet(registers.I + i);
+    }
+
+  } break;
   }
 }

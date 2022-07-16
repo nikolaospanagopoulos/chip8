@@ -1,5 +1,6 @@
 #pragma once
 
+const int defaultSpriteHeight = 5;
 const int chip8MemorySize = 4096;
 const int chip8Width = 64;
 const int chip8Height = 32;

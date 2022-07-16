@@ -8,7 +8,7 @@ static void memoryInBounds(int &index) {
   }
 }
 
-void Chip8Memory::chip8MemorySet(int &&index, unsigned char &&val) {
+void Chip8Memory::chip8MemorySet(int index, unsigned char &val) {
   memoryInBounds(index);
   memory[index] = val;
 }

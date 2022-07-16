@@ -5,7 +5,7 @@
 static void stackInBounds(unsigned char &SP) {
 
   if (SP > totalStackDepth) {
-    //    throw CustomException(const_cast<char *>("stack goes beyond limit"));
+    throw CustomException(const_cast<char *>("stack goes beyond limit"));
   }
 }
 
